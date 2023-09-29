@@ -1,11 +1,11 @@
 <template>
   <a-menu mode="vertical">
-    <div class="border-bottom py-2">
+    <div class="border-bottom py-2" v-if="user">
       <h5>
-        Login as <i>{{ user?.name }}</i>
+        Login as <i>{{ user.name }}</i>
       </h5>
-      <p class="pt-2">ID: #{{ user?.id }}</p>
-      <p>{{ user?.email }}</p>
+      <p class="pt-2">ID: #{{ user.id }}</p>
+      <p>{{ user.email }}</p>
     </div>
     <a-menu-item key="1">
       <router-link to="/admin/users">View All user</router-link>
@@ -22,26 +22,33 @@
 <script>
 import { message } from "ant-design-vue";
 import { logout } from "../api/auth";
-import Cookies from "js-cookie";
 import { useRouter } from "vue-router";
-import { inject } from "vue";
+import { inject, watchEffect, watch } from "vue";
+import Cookies from "js-cookie";
 
 export default {
   setup() {
     const router = useRouter();
     const { setUserState, user } = inject("store");
-    function onLogout() {
+
+    const onLogout = () => {
       logout()
         .then((resp) => {
           if (resp.status === 200) {
+            message.success(resp.data.message);
             Cookies.remove("token", { path: "" });
             setUserState(null);
-            message.success(resp.data.message);
           }
+          router.push("/");
         })
-        .then(() => router.push("/"))
-        .catch((error) => console.log(error));
-    }
+        .catch((error) => message.error(error.response.data.message));
+    };
+
+    // watch(() => {
+    //   console.log(user.value);
+    //   if (user.value) console.log(user.value.name);
+    // });
+
     return { onLogout, user };
   },
 };

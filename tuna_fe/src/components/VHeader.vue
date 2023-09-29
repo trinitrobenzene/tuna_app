@@ -19,9 +19,19 @@
 <script setup>
 import jsCookie from "js-cookie";
 import { inject } from "vue";
+import { getInfo } from "../api/auth.js";
 
 const { isLogin, setUserState } = inject("store");
-setUserState(jsCookie.get("token"));
+const token = jsCookie.get("token");
+if (token) {
+  getInfo(token)
+    .then(({ data }) => {
+      setUserState(data.user);
+    })
+    .catch((err) => console.log(err));
+} else {
+  setUserState(null);
+}
 </script>
 
 <style scoped>

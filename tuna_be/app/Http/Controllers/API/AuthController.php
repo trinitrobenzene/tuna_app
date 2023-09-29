@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -90,7 +92,33 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(auth()->user());
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+
+            // If the token is valid, return the user information
+            return response()->json([
+                'success' => true,
+                'user' => $user
+            ]);
+        } catch (TokenExpiredException $e) {
+            // Token is expired
+            return response()->json([
+                'success' => false,
+                'message' => 'Token expired'
+            ], 401);
+        } catch (TokenInvalidException $e) {
+            // Token is invalid
+            return response()->json([
+                'success' => false,
+                'message' => 'Token invalid'
+            ], 401);
+        } catch (JWTException $e) {
+            // Token is not provided
+            return response()->json([
+                'success' => false,
+                'message' => 'Token not provided'
+            ], 401);
+        }
     }
 
     /**
